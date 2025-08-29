@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SQL Bingo Quiz Game - 3 Sets with BINGO Letters</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+  h1 { text-align: center; margin-bottom: 30px; }
+  .game-container {
+    border: 2px solid #333;
+    padding: 15px;
+    background: white;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h2 {
+    text-align: center;
+  }
+  table { border-collapse: collapse; margin: 0 auto 15px auto; }
+  td {
+    border: 1px solid #555;
+    width: 120px; height: 60px;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    padding: 5px;
+    font-weight: bold;
+    background: white;
+    transition: background-color 0.3s;
+    position: relative;
+  }
+  td.selected { background-color: lightgreen; cursor: default; }
+  td.error { background-color: lightcoral; }
+  td.bingo-letter {
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+    cursor: default;
+  }
+  .question {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    text-align: center;
+    min-height: 3em;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .message {
+    color: red;
+    font-weight: bold;
+    height: 1.5em;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .next-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+  }
+  .set-selector {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .set-selector button {
+    margin: 0 5px;
+    padding: 8px 15px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>SQL Bingo Quiz Game</h1>
+
+<!-- <div class="set-selector">
+  Select Set:
+  <button data-set="set1">Set 1</button>
+  <button data-set="set2">Set 2</button>
+  <button data-set="set3">Set 3</button>
+</div> -->
+
+<div id="game" class="game-container"></div>
+
+<script>
+// Bingo letters for rows and columns
+const bingoLetters = ["B", "I", "N", "G", "O"];
+
+// Three different sets of keywords and questions
+const sets = {
+  set1: {
+    keywords: [
+      "HAVING", "COUNT()", "VARCHAR", "UNIQUE", "CHECK",
+      "WHERE", "SELECT", "RENAME", "TRUNCATE", "INT",
+      "CREATE", "LIKE", "ORDER BY", "FOREIGN KEY", "UPDATE",
+      "LIMIT", "IS NULL", "PRIMARY KEY", "DROP", "CONCAT",
+      "DISTINCT", "NOT NULL", "BETWEEN", "CHAR", "ALTER"
+    ],
+    questionsPool: [
+      {q: "1. Which statement is used to read data from the table?", answer: "SELECT"},
+      {q: "2. Filter the records based on conditions?", answer: "WHERE"},
+      {q: "3. Find the number of rows", answer: "COUNT()"},
+      {q: "4. Arrange the output in specific order.", answer: "ORDER BY"},
+      {q: "5. Keyword to remove duplicates in the output.", answer: "DISTINCT"},
+      {q: "6. Which SQL statement is used to modify the existing structure of a table?", answer: "ALTER"},
+      {q: "7. Which operator is used in SQL to search for a specified pattern in a column?", answer: "LIKE"},
+      {q: "8. Which condition is used to check if a column contains no value?", answer: "IS NULL"},
+      {q: "9. Which constraint ensures that all values in a column are different?", answer: "UNIQUE"},
+      {q: "10. What SQL command is used to change the name of a database table?", answer: "RENAME"},
+      {q: "11. Which operator in SQL is used to filter the result set within a range of values?", answer: "BETWEEN"},
+      {q: "12. Which clause is used in SQL to restrict the number of rows returned by the query?", answer: "LIMIT"},
+      {q: "13. Which command is used to delete an entire table or a database from the SQL database?", answer: "DROP"},
+      {q: "14. What data type is used in SQL to store fixed-length character strings?", answer: "CHAR"},
+      {q: "15. Which command is used to remove all rows from a table, but keep the structure intact?", answer: "TRUNCATE"},
+      {q: "16. Which constraint ensures that all values in a column meet a specific condition?", answer: "CHECK"},
+      {q: "17. Master table.", answer: "PRIMARY KEY"},
+      {q: "18. Which SQL command is used to modify existing records in a table?", answer: "UPDATE"},
+      {q: "19. Which constraint ensures that a column MUST have a value?", answer: "NOT NULL"},
+      {q: "20. Add a new object in the database.", answer: "CREATE"},
+      {q: "21. Which data type is used to store whole numbers in MySQL?", answer: "INT"},
+      {q: "22. Which clause is used to filter records after an aggregation has been performed?", answer: "HAVING"},
+      {q: "23. Which constraint is used to link one table to another by referencing a primary key from a different table?", answer: "FOREIGN KEY"},
+      {q: "24. Which SQL function is used to combine multiple strings into one?", answer: "CONCAT"},
+      {q: "25. What data type in SQL is used to store variable-length strings?", answer: "VARCHAR"}
+    ]
+  },
+  set2: {
+    keywords: [
+      "INNER JOIN", "GROUP BY", "INDEX", "NULL", "HAVING",
+      "UNION", "EXISTS", "VIEW", "TRIGGER", "CASCADE",
+      "PRIMARY KEY", "FOREIGN KEY", "CHECK", "DEFAULT", "ALTER",
+      "DROP", "CREATE", "UPDATE", "DELETE", "INSERT",
+      "BETWEEN", "LIKE", "DISTINCT", "ORDER BY", "LIMIT"
+    ],
+    questionsPool: [
+      {q: "1. Which SQL clause groups rows that have the same values?", answer: "GROUP BY"},
+      {q: "2. Used to combine results of two or more SELECT statements.", answer: "UNION"},
+      {q: "3. A virtual table based on the result-set of an SQL statement.", answer: "VIEW"},
+      {q: "4. A database object that automatically executes in response to certain events.", answer: "TRIGGER"},
+      {q: "5. Keyword to specify a condition after grouping.", answer: "HAVING"},
+      {q: "6. Used to find records that exist in a subquery.", answer: "EXISTS"},
+      {q: "7. Constraint to enforce uniqueness in a table.", answer: "PRIMARY KEY"},
+      {q: "8. Keyword to remove a table or a database object.", answer: "DROP"},
+      {q: "9. Used to add, modify, or delete rows in a table.", answer: "UPDATE"},
+      {q: "10. Insert new rows into a table.", answer: "INSERT"},
+      {q: "11. Used to delete records from a table.", answer: "DELETE"},
+      {q: "12. Ensures that all values in a column meet a certain condition.", answer: "CHECK"},
+      {q: "13. Specifies the default value for a column.", answer: "DEFAULT"},
+      {q: "14. Used to filter records based on a range.", answer: "BETWEEN"},
+      {q: "15. Matches a pattern in a query.", answer: "LIKE"},
+      {q: "16. Removes duplicates from query results.", answer: "DISTINCT"},
+      {q: "17. Sorts the result set.", answer: "ORDER BY"},
+      {q: "18. Limits the number of returned records.", answer: "LIMIT"},
+      {q: "19. An optimization structure for fast retrieval.", answer: "INDEX"},
+      {q: "20. Keyword representing a missing or undefined value.", answer: "NULL"},
+      {q: "21. Keyword to alter a table structure.", answer: "ALTER"},
+      {q: "22. Keyword to create a database object.", answer: "CREATE"},
+      {q: "23. Keyword to specify cascading actions.", answer: "CASCADE"},
+      {q: "24. Used to reference a primary key in another table.", answer: "FOREIGN KEY"},
+      {q: "25. Type of join that returns matching rows from both tables.", answer: "INNER JOIN"}
+    ]
+  },
+  set3: {
+    keywords: [
+      "TRANSACTION", "COMMIT", "ROLLBACK", "SAVEPOINT", "LOCK",
+      "GRANT", "REVOKE", "CURSOR", "PROCEDURE", "FUNCTION",
+      "DATABASE", "SCHEMA", "TABLE", "VIEW", "INDEX",
+      "PRIMARY KEY", "FOREIGN KEY", "CHECK", "DEFAULT", "UNIQUE",
+      "INSERT", "UPDATE", "DELETE", "SELECT", "WHERE"
+    ],
+    questionsPool: [
+      {q: "1. A unit of work performed against a database.", answer: "TRANSACTION"},
+      {q: "2. Permanently save changes made in a transaction.", answer: "COMMIT"},
+      {q: "3. Undo changes made in a transaction.", answer: "ROLLBACK"},
+      {q: "4. A point within a transaction to which you can roll back.", answer: "SAVEPOINT"},
+      {q: "5. Mechanism to control concurrent access to data.", answer: "LOCK"},
+      {q: "6. Allows permissions to users.", answer: "GRANT"},
+      {q: "7. Removes permissions from users.", answer: "REVOKE"},
+      {q: "8. Database object used to iterate over query results row-by-row.", answer: "CURSOR"},
+      {q: "9. Named set of SQL statements.", answer: "PROCEDURE"},
+      {q: "10. A function that returns a value.", answer: "FUNCTION"},
+      {q: "11. Organized collection of data.", answer: "DATABASE"},
+      {q: "12. Logical grouping of database objects.", answer: "SCHEMA"},
+      {q: "13. Structure to hold data in rows and columns.", answer: "TABLE"},
+      {q: "14. A virtual table based on query results.", answer: "VIEW"},
+      {q: "15. Data structure for fast lookups.", answer: "INDEX"},
+      {q: "16. Uniquely identifies rows in a table.", answer: "PRIMARY KEY"},
+      {q: "17. Reference key from another table.", answer: "FOREIGN KEY"},
+      {q: "18. Enforces conditions on data.", answer: "CHECK"},
+      {q: "19. Specifies a default value.", answer: "DEFAULT"},
+      {q: "20. Ensures all values are unique.", answer: "UNIQUE"},
+      {q: "21. Add new rows to a table.", answer: "INSERT"},
+      {q: "22. Modify existing rows.", answer: "UPDATE"},
+      {q: "23. Remove rows from a table.", answer: "DELETE"},
+      {q: "24. Retrieve rows from a table.", answer: "SELECT"},
+      {q: "25. Filter rows based on conditions.", answer: "WHERE"}
+    ]
+  }
+};
+
+// Utility to shuffle array (Fisher-Yates)
+function shuffle(array) {
+  const arr = array.slice();
+  for (let i = arr.length -1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// BingoGame class for a single game instance
+class BingoGame {
+  constructor(container, keywords, questionsPool) {
+    this.container = container;
+
+    this.keywords = shuffle(keywords);
+    this.questions = shuffle(questionsPool);
+
+    this.currentQuestionIndex = 0;
+    this.answeredCorrectly = new Set();
+
+    this.render();
+    this.showQuestion();
+  }
+
+  render() {
+    this.container.innerHTML = `
+      <h2>SQL Bingo Quiz Game</h2>
+      <div class="question" id="question">Loading question...</div>
+      <table id="bingo-table"></table>
+      <div class="message" id="message"></div>
+      <button class="next-btn" id="next-btn" disabled>Next Question</button>
+    `;
+
+    this.table = this.container.querySelector(`#bingo-table`);
+    this.questionDiv = this.container.querySelector(`#question`);
+    this.messageDiv = this.container.querySelector(`#message`);
+    this.nextBtn = this.container.querySelector(`#next-btn`);
+
+    this.nextBtn.addEventListener('click', () => this.nextQuestion());
+
+    this.createTable();
+  }
+
+  createTable() {
+    this.cells = []; // 2D array [row][col]
+
+    for (let r = 0; r < 5; r++) {
+      const row = document.createElement('tr');
+      this.cells[r] = [];
+      for (let c = 0; c < 5; c++) {
+        const cell = document.createElement('td');
+        cell.textContent = this.keywords[r * 5 + c];
+        cell.dataset.keyword = this.keywords[r * 5 + c];
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        cell.addEventListener('click', (e) => this.onCellClick(e));
+        row.appendChild(cell);
+        this.cells[r][c] = cell;
+      }
+      // Add extra td for row BINGO letter
+      const bingoCell = document.createElement('td');
+      bingoCell.className = "bingo-letter";
+      bingoCell.dataset.row = r;
+      bingoCell.dataset.type = "row";
+      bingoCell.textContent = "";
+      row.appendChild(bingoCell);
+      this.cells[r][5] = bingoCell;
+      this.table.appendChild(row);
+    }
+
+    // Bottom row for column BINGO letters
+    const bottomRow = document.createElement('tr');
+    for (let c = 0; c < 5; c++) {
+      const bingoCell = document.createElement('td');
+      bingoCell.className = "bingo-letter";
+      bingoCell.dataset.col = c;
+      bingoCell.dataset.type = "col";
+      bingoCell.textContent = "";
+      bottomRow.appendChild(bingoCell);
+    }
+    bottomRow.appendChild(document.createElement('td')); // empty corner
+    this.table.appendChild(bottomRow);
+  }
+
+  onCellClick(event) {
+  if (!this.nextBtn.disabled) {
+    // Already answered, wait for next question
+    return;
+  }
+
+  const cell = event.target;
+  const selectedKeyword = cell.dataset.keyword;
+  const correctAnswer = this.questions[this.currentQuestionIndex].answer;
+
+  if (selectedKeyword === correctAnswer) {
+    cell.classList.add('selected');
+    this.messageDiv.style.color = "green";
+    this.messageDiv.textContent = "Correct!";
+    this.answeredCorrectly.add(selectedKeyword);
+    this.nextBtn.disabled = false;
+
+    // Check for completed row or column to update BINGO letters
+    const row = Number(cell.dataset.row);
+    const col = Number(cell.dataset.col);
+    this.checkRowCompleted(row);
+    this.checkColCompleted(col);
+
+  } else {
+    cell.classList.add('error');
+    this.messageDiv.style.color = "red";
+    this.messageDiv.textContent = "Error: Wrong box selected!";
+
+    setTimeout(() => {
+      cell.classList.remove('error');
+      this.messageDiv.textContent = "";
+
+      // Move to next question automatically
+      this.nextBtn.disabled = false;  // enable next question
+      this.nextQuestion();
+
+    }, 1000);
+  }
+}
+
+    }
+  
+
+  checkRowCompleted(row) {
+    const allSelected = this.cells[row].slice(0,5).every(cell => cell.classList.contains('selected'));
+    const bingoCell = this.cells[row][5];
+    if (allSelected && bingoCell.textContent === "") {
+      bingoCell.textContent = bingoLetters[row];
+    }
+  }
+
+  checkColCompleted(col) {
+    let allSelected = true;
+    for (let r = 0; r < 5; r++) {
+      if (!this.cells[r][col].classList.contains('selected')) {
+        allSelected = false;
+        break;
+      }
+    }
+    const bottomRowIndex = 5;
+    const bottomRow = this.table.rows[bottomRowIndex];
+    const bingoCell = bottomRow.cells[col];
+
+    if (allSelected && bingoCell.textContent === "") {
+      bingoCell.textContent = bingoLetters[col];
+    }
+  }
+
+  nextQuestion() {
+    this.currentQuestionIndex++;
+    if (this.currentQuestionIndex >= this.questions.length) {
+      this.questionDiv.textContent = "🎉 Bingo Quiz Completed! Well done!";
+      this.nextBtn.style.display = 'none';
+      this.messageDiv.textContent = "";
+    } else {
+      this.showQuestion();
+      this.messageDiv.textContent = "";
+      this.nextBtn.disabled = true;
+    }
+  }
+
+  showQuestion() {
+    this.questionDiv.textContent = this.questions[this.currentQuestionIndex].q;
+  }
+}
+
+// Get the container
+const gameContainer = document.getElementById('game');
+
+function loadGame(setName) {
+  if (!(setName in sets)) {
+    // fallback to random set
+    const keys = Object.keys(sets);
+    setName = keys[Math.floor(Math.random() * keys.length)];
+  }
+  // Clear container & create new game
+  gameContainer.innerHTML = "";
+  new BingoGame(gameContainer, sets[setName].keywords, sets[setName].questionsPool);
+  // Update URL hash without scrolling
+  history.replaceState(null, "", "#" + setName);
+}
+
+// Handle URL hash
+function handleHash() {
+  const hash = location.hash.replace('#', '');
+  loadGame(hash);
+}
+
+// Set selector buttons
+document.querySelectorAll('.set-selector button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    loadGame(btn.dataset.set);
+  });
+});
+
+// Load game on page load
+window.addEventListener('load', handleHash);
+
+// Also reload game if hash changes manually
+window.addEventListener('hashchange', handleHash);
+
+</script>
+
+</body>
+</html>

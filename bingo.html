@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SQL Bingo Quiz Game - 3 Random Games</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+  h1 { text-align: center; }
+  .game-container {
+    border: 2px solid #333;
+    padding: 15px;
+    margin-bottom: 40px;
+    background: white;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h2 {
+    text-align: center;
+  }
+  table { border-collapse: collapse; margin: 0 auto 15px auto; }
+  td {
+    border: 1px solid #555;
+    width: 120px; height: 60px;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    padding: 5px;
+    font-weight: bold;
+    background: white;
+    transition: background-color 0.3s;
+  }
+  td.selected { background-color: lightgreen; cursor: default; }
+  td.error { background-color: lightcoral; }
+  .question {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    text-align: center;
+    min-height: 3em;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .message {
+    color: red;
+    font-weight: bold;
+    height: 1.5em;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .next-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>SQL Bingo Quiz Game - 3 Random Games</h1>
+
+<div id="games"></div>
+
+<script>
+// Your keywords (25)
+const keywords = [
+  "HAVING", "COUNT()", "VARCHAR", "UNIQUE", "CHECK",
+  "WHERE", "SELECT", "RENAME", "TRUNCATE", "INT",
+  "CREATE", "LIKE", "ORDER BY", "FOREIGN KEY", "UPDATE",
+  "LIMIT", "IS NULL", "PRIMARY KEY", "DROP", "CONCAT",
+  "DISTINCT", "NOT NULL", "BETWEEN", "CHAR", "ALTER"
+];
+
+// Questions & answers (25)
+const questionsPool = [
+  {q: "1. Which statement is used to read data from the table?", answer: "SELECT"},
+  {q: "2. Filter the records based on conditions?", answer: "WHERE"},
+  {q: "3. Find the number of rows", answer: "COUNT()"},
+  {q: "4. Arrange the output in specific order.", answer: "ORDER BY"},
+  {q: "5. Keyword to remove duplicates in the output.", answer: "DISTINCT"},
+  {q: "6. Which SQL statement is used to modify the existing structure of a table?", answer: "ALTER"},
+  {q: "7. Which operator is used in SQL to search for a specified pattern in a column?", answer: "LIKE"},
+  {q: "8. Which condition is used to check if a column contains no value?", answer: "IS NULL"},
+  {q: "9. Which constraint ensures that all values in a column are different?", answer: "UNIQUE"},
+  {q: "10. What SQL command is used to change the name of a database table?", answer: "RENAME"},
+  {q: "11. Which operator in SQL is used to filter the result set within a range of values?", answer: "BETWEEN"},
+  {q: "12. Which clause is used in SQL to restrict the number of rows returned by the query?", answer: "LIMIT"},
+  {q: "13. Which command is used to delete an entire table or a database from the SQL database?", answer: "DROP"},
+  {q: "14. What data type is used in SQL to store fixed-length character strings?", answer: "CHAR"},
+  {q: "15. Which command is used to remove all rows from a table, but keep the structure intact?", answer: "TRUNCATE"},
+  {q: "16. Which constraint ensures that all values in a column meet a specific condition?", answer: "CHECK"},
+  {q: "17. Master table.", answer: "PRIMARY KEY"},
+  {q: "18. Which SQL command is used to modify existing records in a table?", answer: "UPDATE"},
+  {q: "19. Which constraint ensures that a column can have a value?", answer: "NOT NULL"},
+  {q: "20. Add a new object in the database.", answer: "CREATE"},
+  {q: "21. Which data type is used to store whole numbers in SQL?", answer: "INT"},
+  {q: "22. Which clause is used to filter records after an aggregation has been performed?", answer: "HAVING"},
+  {q: "23. Which constraint is used to link one table to another by referencing a primary key from a different table?", answer: "FOREIGN KEY"},
+  {q: "24. Which SQL function is used to combine multiple strings into one?", answer: "CONCAT"},
+  {q: "25. What data type in SQL is used to store variable-length strings?", answer: "VARCHAR"}
+];
+
+// Utility to shuffle array (Fisher-Yates)
+function shuffle(array) {
+  const arr = array.slice();
+  for (let i = arr.length -1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// BingoGame class for each game instance
+class BingoGame {
+  constructor(container, id) {
+    this.container = container;
+    this.id = id;
+
+    this.keywords = shuffle(keywords);
+    this.questions = shuffle(questionsPool);
+
+    this.currentQuestionIndex = 0;
+    this.answeredCorrectly = new Set();
+
+    this.render();
+    this.showQuestion();
+  }
+
+  render() {
+    this.container.innerHTML = `
+      <h2>Game ${this.id}</h2>
+      <div class="question" id="question-${this.id}">Loading question...</div>
+      <table id="bingo-table-${this.id}"></table>
+      <div class="message" id="message-${this.id}"></div>
+      <button class="next-btn" id="next-btn-${this.id}" disabled>Next Question</button>
+    `;
+
+    this.table = this.container.querySelector(`#bingo-table-${this.id}`);
+    this.questionDiv = this.container.querySelector(`#question-${this.id}`);
+    this.messageDiv = this.container.querySelector(`#message-${this.id}`);
+    this.nextBtn = this.container.querySelector(`#next-btn-${this.id}`);
+
+    this.nextBtn.addEventListener('click', () => this.nextQuestion());
+
+    this.createTable();
+  }
+
+  createTable() {
+    let idx = 0;
+    for (let r = 0; r < 5; r++) {
+      const row = document.createElement('tr');
+      for (let c = 0; c < 5; c++) {
+        const cell = document.createElement('td');
+        cell.textContent = this.keywords[idx];
+        cell.dataset.keyword = this.keywords[idx];
+        cell.addEventListener('click', (e) => this.onCellClick(e));
+        row.appendChild(cell);
+        idx++;
+      }
+      this.table.appendChild(row);
+    }
+  }
+
+  onCellClick(event) {
+    if (!this.nextBtn.disabled) {
+      // Already answered, wait for next question
+      return;
+    }
+
+    const cell = event.target;
+    const selectedKeyword = cell.dataset.keyword;
+    const correctAnswer = this.questions[this.currentQuestionIndex].answer;
+
+    if (selectedKeyword === correctAnswer) {
+      cell.classList.add('selected');
+      this.messageDiv.style.color = "green";
+      this.messageDiv.textContent = "Correct!";
+      this.answeredCorrectly.add(selectedKeyword);
+      this.nextBtn.disabled = false;
+    } else {
+      cell.classList.add('error');
+      this.messageDiv.style.color = "red";
+      this.messageDiv.textContent = "Error: Wrong box selected!";
+      setTimeout(() => {
+        cell.classList.remove('error');
+        this.messageDiv.textContent = "";
+      }, 1500);
+    }
+  }
+
+  nextQuestion() {
+    this.currentQuestionIndex++;
+    if (this.currentQuestionIndex >= this.questions.length) {
+      this.questionDiv.textContent = "🎉 Bingo Quiz Completed! Well done!";
+      this.nextBtn.style.display = 'none';
+      this.messageDiv.textContent = "";
+    } else {
+      this.showQuestion();
+      this.messageDiv.textContent = "";
+      this.nextBtn.disabled = true;
+    }
+  }
+
+  showQuestion() {
+    this.questionDiv.textContent = this.questions[this.currentQuestionIndex].q;
+  }
+}
+
+// Create 3 game containers and initialize games
+const gamesDiv = document.getElementById('games');
+
+for (let i = 1; i <= 3; i++) {
+  const gameDiv = document.createElement('div');
+  gameDiv.className = 'game-container';
+  gamesDiv.appendChild(gameDiv);
+  new BingoGame(gameDiv, i);
+}
+
+</script>
+
+</body>
+</html>

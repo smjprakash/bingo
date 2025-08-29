@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Xiaomi Replica Homepage</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    color: #333;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  ul {
+    list-style: none;
+    margin: 0; padding: 0;
+  }
+
+  /* Navbar */
+  header {
+    background: #ff6700;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+    margin-right: 30px;
+  }
+  nav ul {
+    display: flex;
+    gap: 20px;
+  }
+  nav li {
+    cursor: pointer;
+  }
+  nav li:hover {
+    text-decoration: underline;
+  }
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    gap: 15px;
+  }
+  .nav-right button {
+    background: transparent;
+    border: 1.5px solid white;
+    padding: 6px 14px;
+    color: white;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .nav-right button:hover {
+    background: white;
+    color: #ff6700;
+  }
+
+  /* Slider */
+  .slider {
+    max-width: 1200px;
+    margin: 20px auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+  .slides {
+    display: flex;
+    transition: transform 0.5s ease;
+  }
+  .slide {
+    min-width: 100%;
+    position: relative;
+    background: #f7f7f7;
+  }
+  .slide img {
+    width: 100%;
+    vertical-align: middle;
+    border-radius: 8px;
+  }
+  .slide-content {
+    position: absolute;
+    top: 30%;
+    left: 8%;
+    color: #222;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 20px;
+    border-radius: 6px;
+  }
+  .slide-content h1 {
+    margin: 0 0 10px;
+    font-size: 2.8rem;
+  }
+  .slide-content p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+  .btn {
+    background: #ff6700;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  .btn:hover {
+    background: #e55b00;
+  }
+
+  /* Slider nav arrows */
+  .nav-btn {
+    position: absolute;
+    top: 50%;
+    background: rgba(0,0,0,0.35);
+    border: none;
+    color: white;
+    font-size: 2.5rem;
+    padding: 10px;
+    cursor: pointer;
+    transform: translateY(-50%);
+    user-select: none;
+    border-radius: 50%;
+  }
+  .nav-btn.left {
+    left: 10px;
+  }
+  .nav-btn.right {
+    right: 10px;
+  }
+
+  /* Product Categories */
+  .categories {
+    max-width: 1200px;
+    margin: 50px auto 80px;
+    padding: 0 20px;
+    text-align: center;
+  }
+  .categories h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
+  .category-list {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .category-item {
+    flex: 1 1 120px;
+    max-width: 120px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.3s ease;
+  }
+  .category-item:hover {
+    color: #ff6700;
+  }
+  .category-item img {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 12px;
+  }
+  .category-item p {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  /* Footer */
+  footer {
+    background: #222;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .slide-content {
+      max-width: 90%;
+      top: 20%;
+      left: 5%;
+    }
+    .slide-content h1 {
+      font-size: 2rem;
+    }
+    .slide-content p {
+      font-size: 1rem;
+    }
+    .category-list {
+      gap: 20px;
+    }
+    .category-item {
+      max-width: 100px;
+      flex: 1 1 100px;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MI</div>
+  <nav>
+    <ul>
+      <li>Store</li>
+      <li>Phone</li>
+      <li>Tablets</li>
+      <li>TV & Smart Home</li>
+      <li>Smart Watch & Audio</li>
+    </ul>
+  </nav>
+  <div class="nav-right">
+    <button>Discover</button>
+    <button>Support</button>
+    <button>Search</button>
+    <button>Sign Up</button>
+  </div>
+</header>
+
+<div class="slider">
+  <div class="slides" id="slides">
+    <div class="slide">
+      <img src="https://i.imgur.com/u7l9kkj.png" alt="Xiaomi 15" />
+      <div class="slide-content">
+        <h1>Xiaomi 15</h1>
+        <p>Flagship Leica Imagery<br>Earn ₹2,596 with Mi Points</p>
+        <button class="btn">Learn More</button>
+      </div>
+    </div>
+    <div class="slide">
+      <img src="https://i.imgur.com/TxV0P3Z.png" alt="Mi TV" />
+      <div class="slide-content">
+        <h1>Mi TV 6X</h1>
+        <p>Immersive Viewing Experience</p>
+        <button class="btn">Shop Now</button>
+      </div>
+    </div>
+    <div class="slide">
+      <img src="https://i.imgur.com/9P8JZHu.png" alt="Smart Watch" />
+      <div class="slide-content">
+        <h1>Smart Watch Series</h1>
+        <p>Stay Connected on the Go</p>
+        <button class="btn">Explore</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="nav-btn left" onclick="prevSlide()">‹</button>
+  <button class="nav-btn right" onclick="nextSlide()">›</button>
+</div>
+
+<section class="categories">
+  <h2>Product Categories</h2>
+  <div class="category-list">
+    <div class="category-item">
+      <img src="https://img.icons8.com/ios-filled/100/ff6700/smartphone-tablet.png" alt="Phones" />
+      <p>Phones</p>
+    </div>
+    <div class="category-item">
+      <img src="https://img.icons8.com/ios-filled/100/ff6700/tv.png" alt="TVs" />
+      <p>TV & Smart Home</p>
+    </div>
+    <div class="category-item">
+      <img src="https://img.icons8.com/ios-filled/100/ff6700/tablet.png" alt="Tablets" />
+      <p>Tablets</p>
+    </div>
+    <div class="category-item">
+      <img src="https://img.icons8.com/ios-filled/100/ff6700/smart-watch.png" alt="Smart Watches" />
+      <p>Smart Watch & Audio</p>
+    </div>
+    <div class="category-item">
+      <img src="https://img.icons8.com/ios-filled/100/ff6700/speaker.png" alt="Audio" />
+      <p>Audio</p>
+    </div>
+    <div class="category-item">
+      <img src="https://img.icons8.com/ios-filled/100/ff6700/gift.png" alt="Gifts" />
+      <p>Gifts</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  &copy; 2025 Xiaomi Corporation. All Rights Reserved.
+</footer>
+
+<script>
+  const slides = document.getElementById('slides');
+  const totalSlides = slides.children.length;
+  let currentIndex = 0;
+
+  function updateSlide() {
+    slides.style.transform = `translateX(${-currentIndex * 100}%)`;
+  }
+
+  function nextSlide() {
+    currentIndex = (currentIndex + 1) % totalSlides;
+    updateSlide();
+  }
+
+  function prevSlide() {
+    currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+    updateSlide();
+  }
+
+  // Optional: Auto slide every 5 seconds
+  setInterval(nextSlide, 5000);
+</script>
+
+</body>
+</html>

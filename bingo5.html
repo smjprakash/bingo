@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF‑8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SQL Bingo Quiz Game</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+  h1 { text-align: center; margin-bottom: 10px; }
+  #timer { text-align: center; font-size: 1.2em; margin-bottom: 20px; }
+  .game-container {
+    border: 2px solid #333;
+    padding: 15px;
+    background: white;
+    max-width: 700px;
+    margin: auto;
+  }
+  table { border-collapse: collapse; margin: 0 auto 15px; }
+  td, th {
+    border: 1px solid #555; width: 120px; height: 60px;
+    text-align: center; vertical-align: middle;
+    font-weight: bold; background: white;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    user-select: none;
+  }
+  td.selected { background-color: lightgreen; cursor: default; }
+  th.bingo-letter { background-color: #333; color: white; cursor: default; }
+  #congrats {
+    display: none;
+    text-align: center;
+    font-size: 2em;
+    color: #ff4081;
+    margin: 20px auto;
+    font-weight: bold;
+    animation: pop 0.5s ease-in-out, colorChange 3s infinite alternate;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes colorChange {
+    0% { color: #ff4081; } 25% { color: #00bcd4; }
+    50% { color: #4caf50; } 75% { color: #ffc107; }
+    100% { color: #e91e63; }
+  }
+  #confetti-canvas {
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; width: 100%; height: 100%; z-index: 999;
+  }
+  .balloons {
+    position: fixed; bottom: 0; left: 50%;
+    transform: translateX(-50%); pointer-events: none;
+    z-index: 998;
+  }
+  .balloon {
+    width: 40px; height: 60px;
+    background: radial-gradient(circle at 30% 30%, #ffcccb, #ff4081);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    position: absolute; animation: float 6s linear forwards;
+  }
+  @keyframes float {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-120vh); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>SQL Bingo (Keyword Click Game)</h1>
+<div id="timer">Time Remaining: 03:00</div>
+<div id="game" class="game-container"></div>
+<div id="congrats">🎉 Bingo! Congratulations! 🎉</div>
+<div class="balloons" id="balloons"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+const bingoLetters = ["B","I","N","G","O"];
+const sets = {
+  set1: {
+    keywords: [
+      "WHERE", "LIMIT", "BETWEEN", "CHECK", "HAVING",
+      "RENAME", "NOT NULL", "CREATE", "PRIMARY KEY", "UNIQUE",
+      "IS NULL", "INT", "DISTINCT", "UPDATE", "CHAR",
+      "TRUNCATE", "COUNT()", "CONCAT", "SELECT", "LIKE",
+      "DROP", "ORDER BY", "FOREIGN KEY", "ALTER", "VARCHAR"
+    ],
+    questionsPool: [
+      {q: "Filter records based on condition?", answer: "WHERE"},
+      {q: "Limit result rows?", answer: "LIMIT"},
+      {q: "Check range of values?", answer: "BETWEEN"},
+      {q: "Ensure condition on column?", answer: "CHECK"},
+      {q: "Filter after aggregation?", answer: "HAVING"},
+      {q: "Rename a table?", answer: "RENAME"},
+      {q: "Ensure column has value?", answer: "NOT NULL"},
+      {q: "Create new object?", answer: "CREATE"},
+      {q: "Master table constraint?", answer: "PRIMARY KEY"},
+      {q: "Ensure unique column values?", answer: "UNIQUE"},
+      {q: "Check for NULL?", answer: "IS NULL"},
+      {q: "Whole number type?", answer: "INT"},
+      {q: "Remove duplicates?", answer: "DISTINCT"},
+      {q: "Modify existing records?", answer: "UPDATE"},
+      {q: "Fixed-length string type?", answer: "CHAR"},
+      {q: "Remove all rows, keep structure?", answer: "TRUNCATE"},
+      {q: "Count the number of rows?", answer: "COUNT()"},
+      {q: "Join strings together?", answer: "CONCAT"},
+      {q: "Read data from the table?", answer: "SELECT"},
+      {q: "Search for a pattern?", answer: "LIKE"},
+      {q: "Delete table or DB?", answer: "DROP"},
+      {q: "Arrange output in order?", answer: "ORDER BY"},
+      {q: "Reference another table?", answer: "FOREIGN KEY"},
+      {q: "Modify table structure?", answer: "ALTER"},
+      {q: "Variable-length string type?", answer: "VARCHAR"}
+    ]
+  },
+  set2: {
+    keywords: [
+      "COUNT()", "RENAME", "PRIMARY KEY", "DROP", "BETWEEN",
+      "SELECT", "WHERE", "NOT NULL", "CONCAT", "ORDER BY",
+      "UNIQUE", "HAVING", "CHAR", "LIKE", "CREATE",
+      "DISTINCT", "INT", "TRUNCATE", "UPDATE", "CHECK",
+      "LIMIT", "IS NULL", "ALTER", "FOREIGN KEY", "VARCHAR"
+    ],
+    questionsPool: [
+      {q: "Count the number of rows?", answer: "COUNT()"},
+      {q: "Rename a table?", answer: "RENAME"},
+      {q: "Master table constraint?", answer: "PRIMARY KEY"},
+      {q: "Delete table or DB?", answer: "DROP"},
+      {q: "Check range of values?", answer: "BETWEEN"},
+      {q: "Read data from the table?", answer: "SELECT"},
+      {q: "Filter records based on condition?", answer: "WHERE"},
+      {q: "Ensure column has value?", answer: "NOT NULL"},
+      {q: "Join strings together?", answer: "CONCAT"},
+      {q: "Arrange output in order?", answer: "ORDER BY"},
+      {q: "Ensure unique column values?", answer: "UNIQUE"},
+      {q: "Filter after aggregation?", answer: "HAVING"},
+      {q: "Fixed-length string type?", answer: "CHAR"},
+      {q: "Search for a pattern?", answer: "LIKE"},
+      {q: "Create new object?", answer: "CREATE"},
+      {q: "Remove duplicates?", answer: "DISTINCT"},
+      {q: "Whole number type?", answer: "INT"},
+      {q: "Remove all rows, keep structure?", answer: "TRUNCATE"},
+      {q: "Modify existing records?", answer: "UPDATE"},
+      {q: "Ensure condition on column?", answer: "CHECK"},
+      {q: "Limit result rows?", answer: "LIMIT"},
+      {q: "Check for NULL?", answer: "IS NULL"},
+      {q: "Modify table structure?", answer: "ALTER"},
+      {q: "Reference another table?", answer: "FOREIGN KEY"},
+      {q: "Variable-length string type?", answer: "VARCHAR"}
+    ]
+  },
+  set3: {
+    keywords: [
+      "LIKE", "CHECK", "CREATE", "ORDER BY", "BETWEEN",
+      "HAVING", "TRUNCATE", "UNIQUE", "RENAME", "WHERE",
+      "DROP", "CHAR", "SELECT", "COUNT()", "NOT NULL",
+      "PRIMARY KEY", "UPDATE", "IS NULL", "LIMIT", "INT",
+      "FOREIGN KEY", "DISTINCT", "ALTER", "VARCHAR", "CONCAT"
+    ],
+    questionsPool: [
+      {q: "Search for a pattern?", answer: "LIKE"},
+      {q: "Ensure condition on column?", answer: "CHECK"},
+      {q: "Create new object?", answer: "CREATE"},
+      {q: "Arrange output in order?", answer: "ORDER BY"},
+      {q: "Check range of values?", answer: "BETWEEN"},
+      {q: "Filter after aggregation?", answer: "HAVING"},
+      {q: "Remove all rows, keep structure?", answer: "TRUNCATE"},
+      {q: "Ensure unique column values?", answer: "UNIQUE"},
+      {q: "Rename a table?", answer: "RENAME"},
+      {q: "Filter records based on condition?", answer: "WHERE"},
+      {q: "Delete table or DB?", answer: "DROP"},
+      {q: "Fixed-length string type?", answer: "CHAR"},
+      {q: "Read data from the table?", answer: "SELECT"},
+      {q: "Count the number of rows?", answer: "COUNT()"},
+      {q: "Ensure column has value?", answer: "NOT NULL"},
+      {q: "Master table constraint?", answer: "PRIMARY KEY"},
+      {q: "Modify existing records?", answer: "UPDATE"},
+      {q: "Check for NULL?", answer: "IS NULL"},
+      {q: "Limit result rows?", answer: "LIMIT"},
+      {q: "Whole number type?", answer: "INT"},
+      {q: "Reference another table?", answer: "FOREIGN KEY"},
+      {q: "Remove duplicates?", answer: "DISTINCT"},
+      {q: "Modify table structure?", answer: "ALTER"},
+      {q: "Variable-length string type?", answer: "VARCHAR"},
+      {q: "Join strings together?", answer: "CONCAT"}
+    ]
+  }
+};
+
+
+function getSetNameFromURL() {
+  const hash = window.location.hash.toLowerCase();
+  return ["set1","set2","set3"].includes(hash.slice(1)) ? hash.slice(1) : "set1";
+}
+
+function startTimer(cb) {
+  let t = 180, elm = document.getElementById("timer");
+  const iv = setInterval(() => {
+    t--;
+    elm.textContent = `Time Remaining: ${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+    if (t<=0) { clearInterval(iv); cb(); }
+  }, 1000);
+  return iv;
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById("confetti-canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const conf = Array.from({length:100}, (_,i)=>({
+    x:Math.random()*canvas.width,
+    y: -Math.random()*canvas.height,
+    r: Math.random()*6+4,
+    d: Math.random()*100,
+    color: `hsl(${Math.random()*360},100%,50%)`,
+    tilt: Math.random()*10-10
+  }));
+  const draw = ()=> {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    conf.forEach(c=> {
+      ctx.beginPath();
+      ctx.lineWidth = c.r;
+      ctx.strokeStyle = c.color;
+      ctx.moveTo(c.x+c.tilt, c.y);
+      ctx.lineTo(c.x+c.tilt + c.r/2, c.y + c.tilt + c.r/2);
+      ctx.stroke();
+      c.y += 4 + c.r/2;
+      c.tilt += 0.5;
+      if (c.y > canvas.height) c.y = -10, c.x = Math.random()*canvas.width;
+    });
+  };
+  const iv = setInterval(draw, 20);
+  setTimeout(()=>{ clearInterval(iv); ctx.clearRect(0,0,canvas.width,canvas.height); }, 5000);
+}
+
+function launchBalloons() {
+  const c = document.getElementById("balloons");
+  for(let i=0;i<15;i++){
+    const b=document.createElement("div");
+    b.className="balloon";
+    b.style.left=`${Math.random()*100}%`;
+    b.style.background=`hsl(${Math.random()*360},80%,70%)`;
+    b.style.animationDuration=`${4+Math.random()*4}s`;
+    c.appendChild(b);
+    setTimeout(()=> b.remove(),8000);
+  }
+}
+
+class Bingo {
+  constructor() {
+    this.setName = getSetNameFromURL();
+    this.keys = sets[this.setName].keywords;
+    this.chosen = new Set();
+    this.rowsDone = new Set();
+    this.colsDone = new Set();
+    this.domGame = document.getElementById("game");
+    this.timerInterval = startTimer(()=> this.end(false));
+    this.buildBoard();
+  }
+
+  buildBoard() {
+    this.domGame.innerHTML = `<table><thead><tr><th></th>${bingoLetters.map(()=>'<th></th>').join('')}</tr></thead><tbody>${
+      Array.from({length:5}, (_,r)=> `<tr><th>${''}</th>${
+        Array.from({length:5}, (_,c)=>{
+          const kw = this.keys[r*5+c];
+          return `<td data-r="${r}" data-c="${c}">${kw}</td>`;
+        }).join('')
+      }</tr>`).join('')
+    }</tbody></table>`;
+    this.domTable = this.domGame.querySelector("table");
+    this.domGame.querySelectorAll("td").forEach(td=>{
+      td.addEventListener("click", ()=> {
+        if (td.classList.contains("selected")) return;
+        td.classList.add("selected");
+        const r = +td.dataset.r, c = +td.dataset.c;
+        this.chosen.add(r*5+c);
+        this.checkRow(r); this.checkCol(c);
+      });
+    });
+  }
+
+  checkRow(r){
+    const ok = Array(5).every((_,c)=> this.chosen.has(r*5+c));
+    if (ok && !this.rowsDone.has(r)) {
+      this.rowsDone.add(r);
+      this.finish();
+    }
+  }
+
+  checkCol(c){
+    const ok = Array(5).every((_,r)=> this.chosen.has(r*5+c));
+    if (ok && !this.colsDone.has(c)) {
+      this.colsDone.add(c);
+      this.finish();
+    }
+  }
+
+  finish(){
+    if (this.rowsDone.size+this.colsDone.size>0) {
+      this.end(true);
+    }
+  }
+
+  end(win){
+    clearInterval(this.timerInterval);
+    if (win) {
+      document.getElementById("congrats").style.display = "block";
+      launchConfetti();
+      launchBalloons();
+    } else {
+      document.getElementById("timer").textContent = "⏰ Time's up! Game Over!";
+    }
+    this.domGame.querySelectorAll("td").forEach(td=>td.style.pointerEvents='none');
+  }
+}
+
+document.addEventListener("DOMContentLoaded", ()=> new Bingo());
+</script>
+</body>
+</html>
