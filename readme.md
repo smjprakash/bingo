@@ -1,0 +1,1 @@
+hai Welcome to bingo game
